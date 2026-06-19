@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMerchant AI - Çift Katmanlı NLP Paneli</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">Smart<span>Merchant</span> AI</div>
+        <div class="nav-links">
+            <span class="active">Review Analytics</span>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <section class="left-panel">
+            <div class="card">
+                <h2>Model Kontrolü</h2>
+                <p class="subtitle">Yorumları sınıflandırmadan önce yapay zeka modelini eğitin.</p>
+                <button id="train-btn" class="btn btn-primary">🤖 Modeli Eğit (1 Dk)</button>
+                <div id="model-status" class="status-text">Model durumu: Hazır değil ❌</div>
+            </div>
+
+            <div class="card margin-top">
+                <h2>Müşteri Yorum Girişi</h2>
+                <p class="subtitle">E-ticaret platformlarından gelen yorumu buraya yapıştırın.</p>
+                <textarea id="review-input" placeholder="Örn: Kargo çok hızlı geldi ama ürünün dikişleri sökülmüştü, kalitesiz çöp..."></textarea>
+                <button id="analyze-btn" class="btn btn-success" disabled>🔍 Yorumu Analiz Et</button>
+            </div>
+        </section>
+
+        <section class="right-panel">
+            <div class="card full-height">
+                <h2>AI Analiz Raporu</h2>
+                <p class="subtitle">Çift katmanlı (Multi-label) yapay sinir ağı sonuçları.</p>
+                
+                <div class="results-grid">
+                    <div class="result-box">
+                        <h3>1. Katman: Konu/Kategori</h3>
+                        <div id="category-output" class="badge badge-empty">Bekliyor...</div>
+                        <p class="explanation">Model, metnin hangi departmanı ilgilendirdiğini ayrıştırdı.</p>
+                    </div>
+
+                    <div class="result-box">
+                        <h3>2. Katman: Duygu Durumu</h3>
+                        <div id="sentiment-output" class="badge badge-empty">Bekliyor...</div>
+                        <p class="explanation">Model, ilgili konuya dair memnuniyet durumunu ölçtü.</p>
+                    </div>
+                </div>
+
+                <div class="keyword-section margin-top">
+                    <h3>Metinde Yakalanan Anahtar Kelimeler</h3>
+                    <div id="keywords-container" class="tags-wrapper">
+                        <span class="empty-tag">Henüz analiz yapılmadı.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="training-modal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="spinner"></div>
+            <h3>SmartMerchant AI Model Training</h3>
+            <p>Yapaysal Sinir Ağı Katmanları Oluşturuluyor...</p>
+            <div class="modal-steps">
+                <p>🔄 [1/2] Kategori Modeli Eğitiliyor...</p>
+                <p>🔄 [2/2] Duygu Analizi Eğitiliyor...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

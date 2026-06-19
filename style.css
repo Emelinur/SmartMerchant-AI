@@ -1,0 +1,242 @@
+/* --- TEMEL RENK PALETİ VE DEĞİŞKENLER --- */
+:root {
+    --bg-color: #eef2f7;         /* Yumuşak açık gri/mavi arka plan */
+    --card-bg: #ffffff;          /* Temiz beyaz kartlar */
+    --text-main: #2c3e50;        /* Koyu lacivert/gri metin */
+    --text-muted: #7f8c8d;       /* Filtrelenmiş soluk gri metin */
+    --primary: #3498db;          /* Güven veren mavi */
+    --success: #2ecc71;          /* Canlı pastel yeşil */
+    --danger: #e74c3c;           /* Yumuşak pastel kırmızı */
+    --accent: #1abc9c;           /* Turkuaz buton rengi */
+    --border-color: #e2e8f0;     /* İnce ara çizgiler */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+/* --- NAVBAR --- */
+.navbar {
+    background-color: var(--card-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.logo span {
+    color: var(--primary);
+}
+
+.nav-links span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 20px;
+    cursor: pointer;
+}
+
+.nav-links span.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 5px;
+}
+
+/* --- ANA DÜZEN (SPLIT SCREEN) --- */
+.app-container {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 25px;
+    padding: 30px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* --- KART TASARIMLARI (SADE VE GÖLGELİ) --- */
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.full-height {
+    height: 100%;
+}
+
+.margin-top { margin-top: 25px; }
+
+h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+/* --- GİRDİ ELEMANLARI --- */
+textarea {
+    width: 100%;
+    height: 180px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    font-size: 14px;
+    resize: none;
+    background-color: #f8fafc;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+textarea:focus {
+    border-color: var(--primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* --- BUTONLAR --- */
+.btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+}
+
+.btn-primary { background-color: var(--primary); color: white; }
+.btn-primary:hover { background-color: #2980b9; }
+
+.btn-success { background-color: var(--accent); color: white; }
+.btn-success:hover { background-color: #16a085; }
+.btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+.status-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* --- SAĞ PANEL SONUÇ KUTULARI --- */
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.result-box {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+
+.result-box h3 {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.explanation {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 15px;
+}
+
+/* --- DİNAMİK BADGELER (ROKET TASARIM) --- */
+.badge {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.badge-empty { background: #e2e8f0; color: var(--text-muted); }
+.badge-kargo { background: rgba(52, 152, 219, 0.1); color: var(--primary); border: 1px solid var(--primary); }
+.badge-urun { background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: 1px solid #9b59b6; }
+.badge-pozitif { background: rgba(46, 204, 113, 0.1); color: var(--success); border: 1px solid var(--success); }
+.badge-negatif { background: rgba(231, 76, 60, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+
+/* --- ANAHTAR KELİME ETİKETLERİ --- */
+.tags-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.keyword-tag {
+    background: #eef2f7;
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.empty-tag { font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+/* --- MODAL (LOADING SCREEN) --- */
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(44, 62, 80, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 999;
+}
+
+.modal {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.modal p { font-size: 13px; color: var(--text-muted); margin: 10px 0 20px; }
+.modal-steps p { font-size: 12px; text-align: left; margin: 5px 0; font-weight: 600; }
+
+.hidden { display: none !important; }
+
+/* Dönen Yükleme Çemberi (Spinner) */
+.spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(52, 152, 219, 0.1);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
