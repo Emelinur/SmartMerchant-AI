@@ -1,6 +1,23 @@
 // --- 1. SÖZLÜK VE MODEL DEĞİŞKENLERİ ---
 let eTicaretSozluk = []; // Boş başlıyor, JSON'dan dolacak
 let globalModel = null;
+
+function metniNormalizeEt(metin) {
+    if (typeof metin !== 'string') {
+        return '';
+    }
+
+    return metin
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/ç/g, 'c').replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i').replace(/ö/g, 'o')
+        .replace(/ş/g, 's').replace(/ü/g, 'u')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
 // Sayfa açıldığında sözlüğü dışarıdan çeken fonksiyon
 async function sozleriYukle() {
     try {
@@ -17,12 +34,8 @@ sozleriYukle();
 function metniVektoreCevir(metin) {
     if (eTicaretSozluk.length === 0) return [];
     
-    // Görseldeki kelimeler Türkçe karaktersiz olduğu için girdiyi de İngilizce karakter yapıyoruz
-    let temizMetin = metin.toLowerCase()
-        .replace(/ç/g, 'c').replace(/ğ/g, 'g')
-        .replace(/ı/g, 'i').replace(/ö/g, 'o')
-        .replace(/ş/g, 's').replace(/ü/g, 'u');
-        
+    const temizMetin = metniNormalizeEt(metin);
+
     return eTicaretSozluk.map(kelime => temizMetin.includes(kelime) ? 1 : 0);
 }
 
@@ -30,11 +43,8 @@ function metniVektoreCevir(metin) {
 function yakalananKelimeleriBul(metin) {
     if (eTicaretSozluk.length === 0) return [];
     
-    let temizMetin = metin.toLowerCase()
-        .replace(/ç/g, 'c').replace(/ğ/g, 'g')
-        .replace(/ı/g, 'i').replace(/ö/g, 'o')
-        .replace(/ş/g, 's').replace(/ü/g, 'u');
-        
+    const temizMetin = metniNormalizeEt(metin);
+
     return eTicaretSozluk.filter(kelime => temizMetin.includes(kelime));
 }
 
@@ -51,34 +61,80 @@ async function modeliEgit() {
     model.compile({ optimizer: 'adam', loss: 'binaryCrossentropy' });
 
     // CÜMLELERİ BIRAKTIK! Kelime gruplarını doğrudan matrise çeviriyoruz.
-    const egitimGirdileri = tf.tensor2d([
-        // 1. Grup: Saf Kargo Kelimeleri Örnekleri
-        metniVektoreCevir("kargo yavas teslimat rezalet kurye berbat ulasmadi gec"),
-        metniVektoreCevir("kargo hizli teslimat guzel zamaninda ulasti paketleme harika"),
+   const egitimGirdileri = tf.tensor2d([
+        // 1. Kargo / Teslimat + Olumlu Kelimeler
+        metniVektoreCevir(
+            "basarili cabuk ertesi geldi gonderdiler gonderildi hemen hizli hizliydi " +
+            "kargo kargoda kargolama kargoya siparis surede teslim teslimat trendyol " +
+            "ulasti zaman zamaninda satici gayet iyi iyiydi memnun memnunum tesekkur tesekkurler"
+        ),
 
-        // 2. Grup: Saf Ürün Kelimeleri Örnekleri
-        metniVektoreCevir("urun kaliteli kumas beden guzel kalitesi muhtesem"),
-        metniVektoreCevir("urun defolu dikisleri berbat yirtik bozuk dandik plastik kalitesiz"),
+        // 2. Kargo / Teslimat + Olumsuz Kelimeler
+        metniVektoreCevir(
+            "acilmadi acilmiyor bekledigim bekledigimden beklemeyin berbat bozuk bozuldu " +
+            "calismadi calismiyor eksik gec gelmedi gelmiyor gonderdim hatali iade " +
+            "kalmadim malesef maalesef problem rezalet rezil sikinti sorun sorunsuz " +
+            "yok yoktu gecikme satici aldanmayin almayin vermeyin yanlis"
+        ),
 
-        // 3. Grup: Saf Olumlu/Negatif Duygu Tetikleyicileri
-        metniVektoreCevir("harika mukemmel tesekkurler begendim begendi iyiki tavsiye"),
-        metniVektoreCevir("cop rezalet iade kotu yazik onermiyorum hic degil yok kandirmislar resmen fotoda") 
+        // 3. Ürün Kalitesi + Olumlu Kelimeler
+        metniVektoreCevir(
+            "acik acildi alinabilir alisveris bayildi bayildim " +
+            "begendi begendik begendim begenerek cihaz calisiyor " +
+            "deger duzgun efsane fiyat fiyata fiyati fiyatina gercekten gorundugu " +
+            "gorunuyor guzel guzeldi harika hediye hos hosuma ince kalite kalitede " +
+            "kaliteli kalitesi kullandim kullanilabilir kullanim kullanisli kullaniyorum " +
+            "kumas kumasi kutu kutusu lazim magaza makina makine makinesi malzeme " +
+            "malzemesi muhtesem mukemmel muthis normal oldu olmus oneririm ozenli " +
+            "paketi paketleme paketlemesi performans performansi puan rahat saglam " +
+            "sahane sarj sarji satin ses sevdi sevdim suan super tavsiye tekrar " +
+            "telefon ucuz urun urunde urunden urunler urunu urunum urunun uygun " +
+            "uzun var vardi verdim veriyor yeni yer yeterli yildiz yine yorum yorumlari yuksek zaten"
+        ),
+
+        // 4. Ürün Kalitesi + Olumsuz Kelimeler
+        metniVektoreCevir(
+            "aldanmayin almayin begenmedim berbat bozuk bozuldu cizik cop cope " +
+            "dandik defolu degil degmez dikisleri dikkat dusuk igrenc kalitesiz " +
+            "kirik kirildi kokuyor kotu kotuydu kucuk kullanissiz kullanmadim " +
+            "malesef maalesef olmadi olmuyor onermiyorum ozensiz pahali param " +
+            "paraniza parasina pisman pismanim plastik problem rezalet rezil " +
+            "sikinti sorun yirtik yirtildi yok yoktu zor zorunda " +
+            "eksik hatalı hatali hasar hasarli bozulmus koptu teslimat " +
+            "kalitesiz ucuz parasizilik ucuza bekledigim beklenigim " +
+            "acikti acildi coruk kirmis kirtildi seklinde sekilsiz ince ipek nici " +
+            "kullanilmiyor kullanilmaz yapilmamis yapilmiyor yapilmas " +
+            "zarar zedeli zedelemis ziyan ziyanda oynatilmis oynatilmiyor " +
+            "sinifi sinifinda derecesi derecesinde seviyesi seviyesinde " +
+            "kapasite kapasitesi ozellik ozellikle tanitim tanitimda tanitiminda " +
+            "tekrar tekrarli tekrarlanma tekrarlandi " +
+            "teslimata teslimatte teslimatta teslimatinde teslimatinda " +
+            "ucuzu ucuzunuz ucuzum malzeme malzemes malzemeleri malzemenin " +
+            "seklini seklinde seklindeki sekline seklinin seklinde " +
+            "aciklamasi aciklamada aciklamadaki aciklamalar aciklama " +
+            "baskasina baskasinin baskasina baskalarina baskalarin " +
+            "gelmedi gelmedigi gelmeyen gelmiyor gelmiş gelişi gelişinde " +
+            "calismiyor calismiyor calismadi calismayan calismayacak " +
+            "sahte sahtedir sahtesi sahtecilik sahte sakte saktedir " +
+            "hile hileli hilenin hileyedi hileci hildeci hildeciler " +
+            "reklam reklamda reklamdan reklamlari reklamli reklamın " +
+            "goturu goturuu goturmedi goturmemiş goturmeyiz goturemiyor " +
+            "donen donemi doneminde doneminin doneminin donemin doneminize " +
+            "acilabilir acilabilirse acilmadi acilmadiği acilmiyor acilmayacak " +
+            "satilan satildi satilmadi satilmiş satilmiyor satilacak satilacagi"
+        )
     ]);
 
     // Çıktı Etiketleri: [Kargo, Ürün, Pozitif, Negatif]
     const egitimEtiketleri = tf.tensor2d([
-        [1, 0, 0, 1], // Kargo ağırlıklı kelimeler (Genel negatif)
-        [1, 0, 1, 0], // Kargo ağırlıklı kelimeler (Genel pozitif)
-        
-        [0, 1, 1, 0], // Ürün ağırlıklı kelimeler (Genel pozitif)
-        [0, 1, 0, 1], // Ürün ağırlıklı kelimeler (Genel negatif)
-        
-        [0, 0, 1, 0], // Sadece saf pozitif kelimeler tetiği
-        [0, 0, 0, 1]  // Sadece saf negatif kelimeler tetiği (kandırmışlar, fotoda, yok, değil burada ağırlık kazandı!)
+        [1, 0, 1, 0], // 1. Grup: Kargo + Pozitif
+        [1, 0, 0, 1], // 2. Grup: Kargo + Negatif
+        [0, 1, 1, 0], // 3. Grup: Ürün + Pozitif
+        [0, 1, 0, 1]  // 4. Grup: Ürün + Negatif
     ]);
 
-    // Kelime bağlarını koparmamak için epoch sayısını 150 yapıyoruz
-    await model.fit(egitimGirdileri, egitimEtiketleri, { epochs: 150 });
+    // Kelime bağlarını koparmamak için epoch sayısını 300 yapıyoruz (negatif kelimeleri daha ağır öğrenmesi için)
+    await model.fit(egitimGirdileri, egitimEtiketleri, { epochs: 300 });
     return model;
 }
 
@@ -116,7 +172,10 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
     const sentimentOutput = document.getElementById('sentiment-output');
     const keywordsContainer = document.getElementById('keywords-container');
 
-    if (!userInput.trim() || !globalModel) return;
+    if (!userInput.trim() || !globalModel || eTicaretSozluk.length === 0) {
+        keywordsContainer.innerHTML = '<span class="empty-tag">Model veya sözlük hazır değil.</span>';
+        return;
+    }
 
     // 1. HER ANALİZDEN ÖNCE ARAYÜZÜ VE SINIFLARI TAMAMEN SIFIRLA
     categoryOutput.className = "badge badge-empty";
@@ -127,47 +186,73 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
 
     // 2. TF.TIDY İLE HAFIZAYI VE TENSÖRLERİ KORUMA ALTINA ALIYORUZ
     // Bu sayede arka arkaya basıldığında eski tahminler yeni tahmini ASLA kirletemez.
-    const sonuclar = tf.tidy(() => {
-        const vektor = metniVektoreCevir(userInput);
-        const girdiTensor = tf.tensor2d([vektor]);
-        const tahmin = globalModel.predict(girdiTensor);
-        
-        // Veriyi senkronize ve temiz bir şekilde dışarı fırlatıyoruz
-        return tahmin.dataSync(); 
-    });
+    let sonuclar;
+    try {
+        sonuclar = tf.tidy(() => {
+            const vektor = metniVektoreCevir(userInput);
+            if (vektor.length !== eTicaretSozluk.length) {
+                throw new Error('Girdi vektörü sözlük boyutuyla eşleşmiyor.');
+            }
 
-    // 3. 1. Katman Sonucunu Ekrana Bas (Kargo mu Ürün mü?)
-    categoryOutput.className = "badge"; // Temizle
-    if (sonuclar[0] >= sonuclar[1]) {
-        categoryOutput.innerText = "Kargo / Teslimat 📦";
-        categoryOutput.classList.add('badge-kargo');
-    } else {
-        categoryOutput.innerText = "Ürün Kalitesi 💎";
-        categoryOutput.classList.add('badge-urun');
-    }
+            const girdiTensor = tf.tensor2d([vektor]);
+            const tahmin = globalModel.predict(girdiTensor);
 
-    // 4. 2. Katman Sonucunu Ekrana Bas (Pozitif mi Negatif mi?)
-    sentimentOutput.className = "badge"; // Temizle
-    if (sonuclar[2] >= sonuclar[3]) {
-        sentimentOutput.innerText = "Olumlu / Memnun 🌱";
-        sentimentOutput.classList.add('badge-pozitif');
-    } else {
-        sentimentOutput.innerText = "Olumsuz / Şikayet 🚨";
-        sentimentOutput.classList.add('badge-negatif');
-    }
-
-    // 5. Metinde Yakalanan Anahtar Kelimeleri Ekrana Bas
-    const sampleText = userInput; // Referans temizliği
-    const yakalananlar = yakalananKelimeleriBul(sampleText);
-
-    if (yakalananlar.length === 0) {
-        keywordsContainer.innerHTML = '<span class="empty-tag">Eşleşen anahtar kelime bulunamadı.</span>';
-    } else {
-        yakalananlar.forEach(kelime => {
-            const tag = document.createElement('span');
-            tag.className = 'keyword-tag';
-            tag.innerText = kelime;
-            keywordsContainer.appendChild(tag);
+            // Veriyi senkronize ve temiz bir şekilde dışarı fırlatıyoruz
+            return tahmin.dataSync();
         });
+    } catch (error) {
+        console.error('Analiz sırasında hata oluştu:', error);
+        categoryOutput.className = 'badge badge-empty';
+        categoryOutput.innerText = 'Analiz yapılamadı';
+        sentimentOutput.className = 'badge badge-empty';
+        sentimentOutput.innerText = 'Analiz yapılamadı';
+        keywordsContainer.innerHTML = '<span class="empty-tag">Bu yorum işlenemedi.</span>';
+        return;
+    }
+
+    const threshold = 0.55; // %55 barajı (model dengesizliğine karşı daha katı)
+
+    const yakalananKelimeler = yakalananKelimeleriBul(userInput);
+    if (yakalananKelimeler.length > 0) {
+        keywordsContainer.innerHTML = yakalananKelimeler
+            .map(kelime => `<span class="tag">${kelime}</span>`)
+            .join('');
+    } else {
+        keywordsContainer.innerHTML = '<span class="empty-tag">Eşleşen anahtar kelime bulunamadı.</span>';
+    }
+
+    const kargoSkor = sonuclar[0];
+    const urunSkor = sonuclar[1];
+    const pozitifSkor = sonuclar[2];
+    const negatifSkor = sonuclar[3];
+
+    // 1. Katman Kararı: Konu / Kategori
+    categoryOutput.className = "badge"; // Reset class
+    
+    if (kargoSkor >= threshold && kargoSkor > urunSkor) {
+        categoryOutput.innerText = `Kargo / Teslimat 📦 (%${Math.round(kargoSkor * 100)})`;
+        categoryOutput.classList.add('badge-kargo');
+    } else if (urunSkor >= threshold && urunSkor > kargoSkor) {
+        categoryOutput.innerText = `Ürün Kalitesi 💎 (%${Math.round(urunSkor * 100)})`;
+        categoryOutput.classList.add('badge-urun');
+    } else {
+        // İki ihtimal de barajın altındaysa veya tamamen eşitse
+        categoryOutput.innerText = "Genel / Belirsiz 🔍";
+        categoryOutput.classList.add('badge-empty');
+    }
+
+    // 2. Katman Kararı: Duygu Durumu
+    sentimentOutput.className = "badge"; // Reset class
+    
+    if (pozitifSkor >= threshold && pozitifSkor > negatifSkor) {
+        sentimentOutput.innerText = `Olumlu / Memnun 🌱 (%${Math.round(pozitifSkor * 100)})`;
+        sentimentOutput.classList.add('badge-pozitif');
+    } else if (negatifSkor >= threshold && negatifSkor > pozitifSkor) {
+        sentimentOutput.innerText = `Olumsuz / Şikayet 🚨 (%${Math.round(negatifSkor * 100)})`;
+        sentimentOutput.classList.add('badge-negatif');
+    } else {
+        // Kullanıcı nötr bir şey yazdıysa veya model kararsız kaldıysa
+        sentimentOutput.innerText = "Nötr / Belirsiz 😐";
+        sentimentOutput.classList.add('badge-empty');
     }
 });
